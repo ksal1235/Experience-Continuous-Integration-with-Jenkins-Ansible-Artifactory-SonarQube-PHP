@@ -1,4 +1,5 @@
-![image](https://github.com/user-attachments/assets/69e3e905-29ce-4cc0-a8a8-6cd6e99f0976)![image](https://github.com/user-attachments/assets/b2005978-7f49-4c0d-86ec-e437434b62da)# Experience-Continuous-Integration-with-Jenkins-Ansible-Artifactory-SonarQube-PHP
+
+# Experience-Continuous-Integration-with-Jenkins-Ansible-Artifactory-SonarQube-PHP
 
 
 ```IMPORTANT NOTICE``` - This project has some initial theoretical concepts that must be well understood before moving on to the practical part. Please read it carefully as many times as needed to completely digest the most important and fundamental DevOps concepts. To successfully implement this project, it is crucial to grasp the importance of the entire CI/CD process, roles of each tool and success metrics - so we encourage you to thoroughly study the following theory until you feel comfortable explaining all the concepts (e.g., to your new junior colleague or during a job interview).
