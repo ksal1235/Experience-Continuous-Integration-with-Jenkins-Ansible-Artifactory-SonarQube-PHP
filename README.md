@@ -495,9 +495,9 @@ Then follow the steps below:
 
 ![image](https://github.com/user-attachments/assets/ab17bd04-9cee-4dcd-a313-28fcb94c2857)
 
+#### Updating the site.yml file
 
-
-
+![image](https://github.com/user-attachments/assets/481cf973-8062-4fe9-a529-8bb1f578cb1e)
 
 
 
