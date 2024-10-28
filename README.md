@@ -416,9 +416,7 @@ pipeline {
             steps {
                 script {
                     def allHosts = [
-                        'ubuntu@172.31.5.211',
-                        'ubuntu@172.31.7.100',
-                        'ec2-user@172.31.10.184',
+                        'ubuntu@172.31.8.66',
                         'ec2-user@172.31.5.211'
                     ]
 
@@ -456,7 +454,7 @@ pipeline {
 
 ```
 
-![image](https://github.com/user-attachments/assets/08ea3412-57eb-412a-9e30-9ecb73df610e)
+![image](https://github.com/user-attachments/assets/d0e13305-4ece-443d-b72a-5abf3d955398)
 
 
 
@@ -497,12 +495,87 @@ Then follow the steps below:
 
 #### Updating the site.yml file
 
-![image](https://github.com/user-attachments/assets/481cf973-8062-4fe9-a529-8bb1f578cb1e)
+Update inventory/dev.yml by specifying the private IP address of the servers
+
+![image](https://github.com/user-attachments/assets/b8978a7c-8608-42d5-aa01-6b873a764e13)
+
+Update the site.yml
+
+![image](https://github.com/user-attachments/assets/75f1c1b6-c13a-402e-8696-c6f3754a83db)
 
 
+After fixing all errors final result looks
+
+![image](https://github.com/user-attachments/assets/e2e08aa7-5d09-4531-88e5-d9aa2b7dc5ab)
 
 
+![image](https://github.com/user-attachments/assets/a40d0bfe-eef1-4e33-a73a-ac851963fc07)
 
 
+![image](https://github.com/user-attachments/assets/be982f02-ed1d-46f1-b7bf-ec9ad8093d9e)
 
 
+If everything goes well for you, it means, the Dev environment has an up-to-date configuration. But what if we need to deploy to other environments?
+
+- Are we going to manually update the Jenkinsfile to point inventory to those environments? such as sit, uat, pentest, etc.
+- Or do we need a dedicated git branch for each environment, and have the inventory part hard coded there.
+
+
+Think about those for a minute and try to work out which one sounds more like a better solution.
+
+Manually updating the Jenkinsfile is definitely not an option. And that should be obvious to you at this point. Because we try to automate things as much as possible.
+
+What we will be doing is to parameterise the deployment. So that at the point of execution, the appropriate values are applied.
+
+
+## Parameterizing Jenkinsfile For Ansible Deployment
+
+
+To deploy to other environments, we will need to use parameters
+
+1. Update sit inventory with new servers (inventory/sit.yml)
+
+```
+[tooling]
+<SIT-Tooling-Web-Server-Private-IP-Address>
+
+[todo]
+<SIT-Todo-Web-Server-Private-IP-Address>
+
+[nginx]
+<SIT-Nginx-Private-IP-Address>
+
+[db:vars]
+ansible_user=ec2-user
+ansible_python_interpreter=/usr/bin/python
+
+[db]
+<SIT-DB-Server-Private-IP-Address>
+
+```
+
+![image](https://github.com/user-attachments/assets/2bf82c36-ad64-42fa-a28e-f9736595da69)
+
+
+2. Update Jenkinsfile to introduce parameterization. Below is just one parameter. It has a default value in case if no value is specified at execution. It also has a description so that everyone is aware of its purpose.
+
+
+```
+pipeline {
+    agent any
+
+    parameters {
+      string(name: 'inventory', defaultValue: 'dev',  description: 'This is the inventory file for the environment to deploy
+      configuration')
+    }
+
+
+```
+![image](https://github.com/user-attachments/assets/05326e7a-86e9-4a2a-b5b7-3f9959cd31ea)
+
+3. In the Ansible execution section, remove the hardcoded inventory/dev and replace with `${inventory} From now on, each time you hit on execute, it will expect an input.
+
+![image](https://github.com/user-attachments/assets/4ebaf23b-7715-4d9c-b1df-b124c2b08e66)
+
+
+4. 
