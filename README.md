@@ -578,4 +578,116 @@ pipeline {
 ![image](https://github.com/user-attachments/assets/4ebaf23b-7715-4d9c-b1df-b124c2b08e66)
 
 
-4. 
+4.  We can see we got build with parameters option on pipeline to execute So click on build with parameters button.
+   
+![image](https://github.com/user-attachments/assets/790d9660-5f56-473a-a129-07adea214422)
+
+#### Notice that the default value loads up, but we can now specify which environment we want to deploy the configuration to. Simply type sit and hit Run
+
+![image](https://github.com/user-attachments/assets/6590d11c-7d6d-492b-83dc-81ed1d7d9235)
+
+
+Build got success for environemtn SIT ..
+
+![image](https://github.com/user-attachments/assets/e68759b9-9343-480f-97df-f316ea36e016)
+
+
+5. Add another parameter. This time, introduce tagging in Ansible. You can limit the Ansible execution to a specific role or playbook desired. Therefore, add an Ansible tag to run against webserver only. Test this locally first to get the experience. Once you understand this, update Jenkinsfile and run it from Jenkins.
+
+- Update playbook/site.yml with tags
+
+![image](https://github.com/user-attachments/assets/4bf1fb4a-ab0f-403a-bfbe-bd0e3cd400b8)
+
+Add another parameter to the jenkinsfile. Name the parameter ansible_tags and the default value webserver
+
+```  string(name: 'ansible_tags', defaultValue: 'webserver', description: 'Ansible tags to run specific roles or tasks') ```
+
+![image](https://github.com/user-attachments/assets/b053eff7-b494-4cde-bf89-c8160f039c6f)
+
+
+![image](https://github.com/user-attachments/assets/9fc2cbcd-353c-4575-b6cb-7613f8cdfa4b)
+
+We can do build the pipeline through Blue Ocean..
+
+![image](https://github.com/user-attachments/assets/edbaac17-497d-4e88-ac62-4c86fed99232)
+
+
+![image](https://github.com/user-attachments/assets/acd74991-56d5-41fb-9bb2-84f692446a18)
+
+
+
+
+## CI/CD Pipline for TODO Application:
+
+We already have tooling website as a part of deployment through Ansible. Here we will introduce another PHP application to add to the list of software products we are managing in our infrastructure. The good thing with this particular application is that it has unit tests, and it is an ideal application to show an end-to-end CI/CD pipeline for a particular application.
+
+Our goal here is to deploy the application onto servers directly from Artifactory rather than from git If you have not updated Ansible with an Artifactory role, simply use this guide to create an Ansible role for Artifactory (ignore the Nginx part). Configure Artifactory on Ubuntu 20.04 https://www.howtoforge.com/tutorial/ubuntu-jfrog/
+
+```
+/path/to/your/laravel/project
+├── app
+│   ├── Console
+│   ├── Exceptions
+│   ├── Http
+│   │   ├── Controllers
+│   │   ├── Middleware
+│   ├── Models
+│   ├── Providers
+├── bootstrap
+│   ├── cache
+├── config
+│   ├── app.php
+│   ├── database.php
+│   └── ...
+├── database
+│   ├── factories
+│   ├── migrations
+│   ├── seeders
+├── public
+│   ├── index.php
+│   ├── css
+│   ├── js
+│   ├── ...
+├── resources
+│   ├── js
+│   ├── lang
+│   ├── views
+│   └── ...
+├── routes
+│   ├── api.php
+│   ├── channels.php
+│   ├── console.php
+│   ├── web.php
+├── storage
+│   ├── app
+│   ├── framework
+│   ├── logs
+├── tests
+│   ├── Feature
+│   ├── Unit
+├── vendor
+├── .env
+├── artisan
+├── composer.json
+├── composer.lock
+├── package.json
+├── phpunit.xml
+└── webpack.mix.js
+
+```
+
+#### Prerequests  Make sure port 8082 is opened in artifactory server.
+
+Adding the jfrog repo roles using following commond:
+
+```
+ansible-galaxy collection install jfrog.platform
+```
+
+![image](https://github.com/user-attachments/assets/6f381548-d247-4b8e-9181-1f0398b6ac8d)
+
+Update ```playbook/site.yml```
+
+
+
+
