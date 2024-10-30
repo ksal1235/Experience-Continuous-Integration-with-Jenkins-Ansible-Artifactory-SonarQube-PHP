@@ -688,6 +688,43 @@ ansible-galaxy collection install jfrog.platform
 
 Update ```playbook/site.yml```
 
+![image](https://github.com/user-attachments/assets/e4f4b969-25fa-475b-b570-c13dcd9fcae9)
+
+![image](https://github.com/user-attachments/assets/deb4a876-1791-4cf4-a461-c8ea5c022dc3)
+
+![image](https://github.com/user-attachments/assets/7e3beae6-e32a-4c76-9d5f-145b32b8d1cf)
+
+![image](https://github.com/user-attachments/assets/d2fac930-2495-4f7b-9f50-4095eea86e6f)
 
 
+Run the playbook against ci.yml to install jfrog artifactory
+
+
+
+
+
+
+
+#### Phase 1 - Prepare Jenkins
+
+1. Fork repository To Own Github Account:
+
+```
+https://github.com/StegTechHub/php-todo/fork
+```
+
+![image](https://github.com/user-attachments/assets/3631b941-1728-425a-91be-637ff4daacff)
+
+2. On you Jenkins server, install PHP, its dependencies and Composer tool (Feel free to do this manually at first, then update your Ansible accordingly later)
+
+```
+
+sudo apt install -y zip libapache2-mod-php phploc php-{xml,bcmath,bz2,intl,gd,mbstring,mysql,zip}
+```
+![image](https://github.com/user-attachments/assets/f0f56bee-ee9a-4bc8-a525-2c62c329ebad)
+
+3. Install Jenkins plugins.
+
+    1. Plot plugin.
+    2. Artifactory plugin.
 
