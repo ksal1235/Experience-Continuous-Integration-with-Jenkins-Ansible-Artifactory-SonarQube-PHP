@@ -621,7 +621,7 @@ We can do build the pipeline through Blue Ocean..
 
 We already have tooling website as a part of deployment through Ansible. Here we will introduce another PHP application to add to the list of software products we are managing in our infrastructure. The good thing with this particular application is that it has unit tests, and it is an ideal application to show an end-to-end CI/CD pipeline for a particular application.
 
-Our goal here is to deploy the application onto servers directly from Artifactory rather than from git If you have not updated Ansible with an Artifactory role, simply use this guide to create an Ansible role for Artifactory (ignore the Nginx part). Configure Artifactory on Ubuntu 20.04 https://www.howtoforge.com/tutorial/ubuntu-jfrog/
+Our goal here is to deploy the application onto servers directly from Artifactory rather than from git If you have not updated Ansible with an Artifactory role, simply use this guide to create an Ansible role for Artifactory (ignore the Nginx part). Configure Artifactory on Ubuntu 20.04 https://www.atlantic.net/dedicated-server-hosting/how-to-install-jfrog-artifactory-on-ubuntu-22-04/
 
 ```
 /path/to/your/laravel/project
@@ -683,8 +683,7 @@ Adding the jfrog repo roles using following commond:
 ```
 ansible-galaxy collection install jfrog.platform
 ```
-
-![image](https://github.com/user-attachments/assets/6f381548-d247-4b8e-9181-1f0398b6ac8d)
+![image](https://github.com/user-attachments/assets/1abf3f89-1941-4487-8e12-ee0d2c5e0577)
 
 Update ```playbook/site.yml```
 
@@ -699,13 +698,14 @@ Update ```playbook/site.yml```
 
 Run the playbook against ci.yml to install jfrog artifactory
 
+![image](https://github.com/user-attachments/assets/307daaa2-349a-4c5f-955b-1c9df038bf19)
+
+![image](https://github.com/user-attachments/assets/c4837649-08e8-40a1-a1b1-d95bf8ee9f6a)
 
 
 
 
-
-
-#### Phase 1 - Prepare Jenkins
+## Phase 1 - Prepare Jenkins
 
 1. Fork repository To Own Github Account:
 
@@ -718,10 +718,35 @@ https://github.com/StegTechHub/php-todo/fork
 2. On you Jenkins server, install PHP, its dependencies and Composer tool (Feel free to do this manually at first, then update your Ansible accordingly later)
 
 ```
-
 sudo apt install -y zip libapache2-mod-php phploc php-{xml,bcmath,bz2,intl,gd,mbstring,mysql,zip}
 ```
 ![image](https://github.com/user-attachments/assets/f0f56bee-ee9a-4bc8-a525-2c62c329ebad)
+
+Install Composer Download the Installer:
+```
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+```
+
+Install Composer Globally
+
+```
+sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+```
+Remove the Installer
+
+```
+php -r "unlink('composer-setup.php');"
+```
+
+Verify Installation
+
+```
+php -v
+```
+
+```
+composer -v
+```
 
 3. Install Jenkins plugins.
 
