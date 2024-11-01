@@ -753,3 +753,40 @@ composer -v
     1. Plot plugin.
     2. Artifactory plugin.
 
+
+```
+pipeline {
+    agent any
+
+  stages {
+
+    stage("Initial cleanup") {
+          steps {
+            dir("${WORKSPACE}") {
+              deleteDir()
+            }
+          }
+        }
+
+    stage('Checkout SCM') {
+      steps {
+            git branch: 'main', url: 'https://github.com/ksal1235/php-todo.git'
+      }
+    }
+
+    stage('Prepare Dependencies') {
+      steps {
+             sh 'composer install'
+             sh 'php artisan migrate'
+             sh 'php artisan db:seed'
+             sh 'php artisan key:generate'
+      }
+    }
+  }
+
+}
+```
+
+![image](https://github.com/user-attachments/assets/ff60a7b5-2092-4711-855a-77da0bd33b13)
+
+
