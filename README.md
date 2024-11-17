@@ -703,6 +703,10 @@ Run the playbook against ci.yml to install jfrog artifactory
 ![image](https://github.com/user-attachments/assets/c4837649-08e8-40a1-a1b1-d95bf8ee9f6a)
 
 
+After build Success Also it doesnt Installed the jfrog Artifactory on Ubuntu Server We can try using jfrog Cloud https://my.jfrog.com/login/
+
+![image](https://github.com/user-attachments/assets/5b1022ca-af7b-456b-857c-94489273d044)
+
 
 
 ## Phase 1 - Prepare Jenkins
@@ -748,12 +752,18 @@ php -v
 composer -v
 ```
 
+![image](https://github.com/user-attachments/assets/48656dc7-f253-46be-982e-a6fb44c06057)
+
+
 3. Install Jenkins plugins.
 
     1. Plot plugin.
     2. Artifactory plugin.
 
+* We will use plot plugin to display tests reports, and code coverage information.
+* The Artifactory plugin will be used to easily upload code artifacts into an Artifactory server.
 
+  
 ```
 pipeline {
     agent any
