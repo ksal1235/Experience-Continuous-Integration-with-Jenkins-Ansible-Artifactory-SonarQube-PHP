@@ -708,6 +708,11 @@ After build Success Also it doesnt Installed the jfrog Artifactory on Ubuntu Ser
 ![image](https://github.com/user-attachments/assets/5b1022ca-af7b-456b-857c-94489273d044)
 
 
+Setting Up the Jenkins..
+
+![image](https://github.com/user-attachments/assets/5fc31e33-8efc-4527-8d17-eeee401a6c7e)
+
+
 
 ## Phase 1 - Prepare Jenkins
 
@@ -799,4 +804,48 @@ pipeline {
 
 ![image](https://github.com/user-attachments/assets/ff60a7b5-2092-4711-855a-77da0bd33b13)
 
+2. Using Blue Ocean, create a multibranch Jenkins pipeline
+
+
+
+3. In jenkins server Install mysql client:
+
+```
+sudo apt install mysql-client -y
+```
+
+-  On the database server, create database and user.
+
+```
+sudo apt install mysql-client -y
+```
+
+-  On your database server, create the necessary database and user as specified in the TODO application `.env.`
+
+```
+Create database homestead;
+CREATE USER 'homestead'@'%' IDENTIFIED BY 'sePret^i';
+GRANT ALL PRIVILEGES ON * . * TO 'homestead'@'%';
+
+```
+![image](https://github.com/user-attachments/assets/67e10ba3-2876-4036-b0a7-630991df4d1b)
+
+
+Login into the DB-server(mysql server) and set the the bind address to 0.0.0.0:
+
+```
+sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+```
+
+![image](https://github.com/user-attachments/assets/05422662-1d12-4306-b566-926201233ed7)
+
+
+Restart the mysql- server:
+
+```
+sudo systemctl restart mysql
+
+```
+
+4. Create a `.env` file in TODO repo and update it with the credentials to connect the database, use sample the code below :
 
