@@ -1064,3 +1064,505 @@ stage ('Upload Artifact to Artifactory') {
 }
 
 ```
+
+
+5. Deploy the application to the dev environment by launching Ansible pipeline
+
+```
+stage ('Deploy to Dev Environment') {
+    steps {
+    build job: 'ansible-project/main', parameters: [[$class: 'StringParameterValue', name: 'env', value: 'dev']], propagate: false, wait: true
+    }
+  }
+```
+
+The build job used in this step tells Jenkins to start another job. In this case it is the ansible-project job, and we are targeting the main branch. Hence, we have ansible-project/main. Since the Ansible project requires parameters to be passed in, we have included this by specifying the parameters section. The name of the parameter is env and its value is dev. Meaning, deploy to the Development environment.
+
+Make sure to update artifactory login details in the todo deployment configuration file in ansible-config-mgt project
+
+- Create a task to set up the Dev environment and deploy artifact to webserver (todo server)
+
+```
+# # tasks file for webserver - php-todo
+---
+# Install Apache
+- name: Install Apache
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.yum:
+    name: httpd
+    state: present
+
+# Install EPEL release
+- name: Install EPEL release
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+    state: present
+
+# Install dnf-utils and Remi repository
+- name: Install dnf-utils and Remi repository
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.yum:
+    name:
+      - dnf-utils
+      - http://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    state: present
+
+# Reset PHP module
+- name: Reset PHP module
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: dnf module reset php -y
+
+# Enable PHP 7.4 module
+- name: Enable PHP 7.4 module
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: dnf module enable php:remi-7.4 -y
+
+# Install PHP and extensions
+- name: Install PHP and extensions
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.yum:
+    name:
+      - php
+      - php-opcache
+      - php-gd
+      - php-curl
+      - php-mysqlnd
+      - php-common
+      - php-mbstring
+      - php-intl
+      - php-xml
+      - php-fpm
+      - php-json
+    state: present
+    enablerepo: remi-7.4
+
+# Ensure PHP-FPM service is started and enabled
+- name: Ensure PHP-FPM service is started and enabled
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: php-fpm
+    state: started
+    enabled: true
+
+# Set SELinux boolean for httpd_execmem
+- name: Set SELinux boolean for httpd_execmem
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.seboolean:
+    name: httpd_execmem
+    state: true
+    persistent: yes
+
+# Ensure httpd service is started and enabled
+- name: Ensure httpd service is started and enabled
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: httpd
+    state: started
+    enabled: true
+
+# Download the artifact
+- name: Download the artifact
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.get_url:
+    url: http://52.52.188.173:8082/artifactory/todo-dev-local/php-todo.zip
+    dest: /home/ec2-user/php-todo.zip
+    url_username: admin
+    url_password: <password>
+
+- name: Ensure unzip is installed
+  become: yes
+  ansible.builtin.yum:
+    name: unzip
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Unzip the artifacts
+  ansible.builtin.unarchive:
+    src: /home/ec2-user/php-todo.zip
+    dest: /var/www/html/
+    remote_src: yes
+
+# Unzip the artifacts
+- name: Unzip the artifacts
+  ansible.builtin.unarchive:
+    src: /home/ec2-user/php-todo.zip
+    dest: /home/ec2-user/
+    remote_src: yes
+  become: true
+
+# Run chown on /var/www/html
+- name: Run chown on /var/www/html
+  ansible.builtin.command:
+    cmd: chown -R $USER:$USER /var/www/html
+  become: true
+
+# Deploy the code
+- name: Deploy the code
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.copy:
+    src: /home/ec2-user/var/lib/jenkins/workspace/php-todo-pipeline/.
+    dest: /var/www/html/
+    force: yes
+    remote_src: yes
+
+# Delete the zip file after unzipping
+- name: Delete the zip file after unzipping
+  ansible.builtin.file:
+    path: /home/ec2-user/php-todo.zip
+    state: absent
+  become: true
+
+# Delete the unzipped files after copying
+- name: Delete the unzipped files after copying
+  ansible.builtin.file:
+    path: /home/ec2-user/php-todo/
+    state: absent
+  become: true
+
+# Remove Apache default welcome page on RedHat-based systems
+- name: Remove Apache default welcome page
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.file:
+    path: /etc/httpd/conf.d/welcome.conf
+    state: absent
+  when: ansible_os_family == "RedHat"
+
+# Restart httpd
+- name: Restart httpd
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: httpd
+    state: restarted
+
+# Verify PHP version
+- name: Verify PHP version
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command: php -v
+  register: php_version
+
+# Display PHP version
+- name: Display PHP version
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.debug:
+    msg: "{{ php_version.stdout }}"
+
+# Set SELinux context for web directory and PHP files
+- name: Set SELinux context for web directory
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: chcon -R -t httpd_sys_content_t /var/www/html
+
+- name: Set SELinux context for PHP writable files
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: chcon -R -t httpd_sys_rw_content_t /var/www/html
+
+# Generate a new APP_KEY if missing or invalid
+- name: Generate a new APP_KEY if missing or invalid
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: php artisan key:generate
+  args:
+    chdir: /var/www/html
+
+# Clear the configuration cache
+- name: Clear the configuration cache
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: php artisan config:cache
+  args:
+    chdir: /var/www/html
+
+# Ensure .env file and config directory have correct permissions
+- name: Ensure .env file and config directory have correct permissions - chown
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: chown -R apache:apache /var/www/html/
+
+- name: Ensure .env file and config directory have correct permissions - chmod
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: chmod -R 775 /var/www/html/
+
+# Restart the web server and PHP-FPM
+- name: Restart the web server
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: httpd
+    state: restarted
+
+- name: Restart PHP-FPM
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: php-fpm
+    state: restarted
+```
+
+But how are we certain that the code being deployed has the quality that meets corporate and customer requirements? Even though we have implemented Unit Tests and Code Coverage Analysis with phpunit and phploc, we still need to implement Quality Gate to ensure that ONLY code with the required code coverage, and other quality standards make it through to the environments.
+
+To achieve this, we need to configure SonarQube – An open-source platform developed by SonarSource for continuous inspection of code quality to perform automatic reviews with static analysis of code to detect bugs, code smells, and security vulnerabilities.
+
+
+** SONARQUBE INSTALLATION
+
+Before we start getting hands on with SonarQube configuration, it is incredibly important to understand a few concepts:
+
+Software Quality – The degree to which a software component, system or process meets specified requirements based on user needs and expectations.
+Software Quality Gates – Quality gates are basically acceptance criteria which are usually presented as a set of predefined quality criteria that a software development project must meet in order to proceed from one stage of its lifecycle to the next one.
+SonarQube is a tool that can be used to create quality gates for software projects, and the ultimate goal is to be able to ship only quality software code.
+
+Despite that DevOps CI/CD pipeline helps with fast software delivery, it is of the same importance to ensure the quality of such delivery. Hence, we will need SonarQube to set up Quality gates. In this project we will use predefined Quality Gates (also known as The Sonar Way ). Software testers and developers would normally work with project leads and architects to create custom quality gates.
+
+Install SonarQube on Ubuntu 24.04 With PostgreSQL as Backend Database
+Here is a manual approach to installation. Ensure that you can to automate the same with Ansible.
+
+Below is a step by step guide how to install SonarQube 7.9.3 version. It has a strong prerequisite to have Java installed since the tool is Java-based. MySQL support for SonarQube is deprecated, therefore we will be using PostgreSQL.
+
+We will make some Linux Kernel configuration changes to ensure optimal performance of the tool – we will increase vm.max_map_count, file discriptor and ulimit.
+
+**** Tune Linux Kernel
+
+This can be achieved by making session changes which does not persist beyond the current session terminal.
+  
+```
+sudo sysctl -w vm.max_map_count=262144
+sudo sysctl -w fs.file-max=65536
+ulimit -n 65536
+ulimit -u 4096
+```
+
+
+To make a permanent change, edit the file /etc/security/limits.conf and append the below
+
+```
+vi /etc/security/limits.conf
+
+```
+
+```
+sonarqube   -   nofile   65536
+sonarqube   -   nproc    4096
+```
+
+Before installing, let us update and upgrade system packages:
+
+```
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+Install wget and unzip packages
+```
+sudo apt-get install wget unzip -y
+```
+Install OpenJDK and Java Runtime Environment (JRE) 11
+
+```
+sudo apt-get install openjdk-11-jdk -y
+sudo apt-get install openjdk-11-jre -y
+```
+
+Set default JDK – To set default JDK or switch to OpenJDK enter below command:
+
+```
+sudo update-alternatives --config java
+```
+If you have multiple versions of Java installed, you should see a list like below:
+
+```
+Selection    Path                                            Priority   Status
+
+------------------------------------------------------------
+
+  0            /usr/lib/jvm/java-11-openjdk-amd64/bin/java      1111      auto mode
+
+  1            /usr/lib/jvm/java-11-openjdk-amd64/bin/java      1111      manual mode
+```
+
+Type "1" to switch OpenJDK 11
+
+Verify the set JAVA Version:
+```
+java -version
+```
+
+** Install and Setup PostgreSQL 10 Database for SonarQube.
+
+The command below will add PostgreSQL repo to the repo list:
+
+```
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+```
+
+Download PostgreSQL software.
+```
+wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add -
+```
+
+Install PostgreSQL Database Server.
+```
+sudo apt-get -y install postgresql postgresql-contrib
+```
+
+Start PostgreSQL Database Server
+
+```
+sudo systemctl start postgresql
+```
+
+Enable it to start automatically at boot time
+```
+sudo systemctl enable postgresql
+```
+
+Change the password for default postgres user (Pass in the password you intend to use, and remember to save it somewhere)
+
+```
+sudo passwd postgres
+```
+
+Switch to the postgres user
+
+```
+su  postgre -
+```
+
+Create a new user by typing
+
+```
+createuser sonar
+```
+
+Switch to the PostgreSQL shell
+
+```
+psql
+```
+
+Set a password for the newly created user for SonarQube database
+
+```
+ALTER USER sonar WITH ENCRYPTED password 'sonar';
+
+```
+
+
+Create a new database for PostgreSQL database by running:
+```
+CREATE DATABASE sonarqube OWNER sonar;
+```
+
+Grant all privileges to sonar user on sonarqube Database.
+```
+grant all privileges on DATABASE sonarqube to sonar;
+```
+
+Exit from the psql shell:
+
+```
+\q
+
+```
+
+** Install SonarQube on Ubuntu 24.04 LTS.
+
+Navigate to the tmp directory to temporarily download the installation files
+
+```
+cd /tmp && sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-7.9.3.zip
+```
+
+Unzip the archive setup to /opt directory
+```
+sudo unzip sonarqube-7.9.3.zip -d /opt
+```
+
+Move extracted setup to /opt/sonarqube directory
+
+```
+sudo mv /opt/sonarqube-7.9.3 /opt/sonarqube
+```
+
+** CONFIGURE SONARQUBE
+
+We cannot run SonarQube as a root user, if you run using root user it will stop automatically. The ideal approach will be to create a separate group and a user to run SonarQube
+
+Create a group sonar
+
+```
+    sudo groupadd sonar
+```
+
+Now add a user with control over the /opt/sonarqube directory
+
+```
+sudo useradd -c "user to run SonarQube" -d /opt/sonarqube -g sonar sonar
+sudo chown sonar:sonar /opt/sonarqube -R
+```
+
+Open SonarQube configuration file using your favourite text editor (e.g., nano or vim)
+
+```
+sudo vim /opt/sonarqube/conf/sonar.properties
+```
+
+Find the following lines:
+```
+#sonar.jdbc.username=
+#sonar.jdbc.password=
+```
+
+Uncomment them and provide the values of PostgreSQL Database username and password:
+
+```
+#--------------------------------------------------------------------------------------------------
+
+# DATABASE
+
+#
+
+# IMPORTANT:
+
+# - The embedded H2 database is used by default. It is recommended for tests but not for
+
+#   production use. Supported databases are Oracle, PostgreSQL and Microsoft SQLServer.
+
+# - Changes to database connection URL (sonar.jdbc.url) can affect SonarSource licensed products.
+
+# User credentials.
+
+# Permissions to create tables, indices and triggers must be granted to JDBC user.
+
+# The schema must be created first.
+
+sonar.jdbc.username=sonar
+sonar.jdbc.password=sonar
+sonar.jdbc.url=jdbc:postgresql://localhost:5432/sonarqube
+```
+
