@@ -401,7 +401,7 @@ pipeline {
 
         stage('Checkout SCM') {
             steps {
-                git branch: 'main', url: 'https://github.com/ksal1235/ansible-project.git'
+                git branch: 'main', url: 'https://github.com/mimi-netizen/ansible-config-mgt.git'
             }
         }
 
@@ -416,8 +416,9 @@ pipeline {
             steps {
                 script {
                     def allHosts = [
-                        'ubuntu@172.31.8.66',
-                        'ec2-user@172.31.5.211'
+                        'ubuntu@172.31.8.154',
+                        'ubuntu@172.31.3.198',
+                        'ec2-user@172.31.6.165'
                     ]
 
                     sshagent(['private-key']) {
@@ -454,8 +455,7 @@ pipeline {
 
 ```
 
-![image](https://github.com/user-attachments/assets/d0e13305-4ece-443d-b72a-5abf3d955398)
-
+![image](https://github.com/user-attachments/assets/7d91e99d-5d94-4f3b-bb4c-cac338f46ee4)
 
 
 # Note: Ensure that Ansible runs against the Dev environment successfully.
