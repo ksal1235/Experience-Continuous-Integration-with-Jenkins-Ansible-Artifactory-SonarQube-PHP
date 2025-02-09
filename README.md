@@ -1541,11 +1541,8 @@ Find the following lines:
 Uncomment them and provide the values of PostgreSQL Database username and password:
 
 ```
-#--------------------------------------------------------------------------------------------------
 
 # DATABASE
-
-#
 
 # IMPORTANT:
 
